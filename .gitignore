@@ -23,6 +23,13 @@ __pycache__/
 dist/
 build/
 
+# Local staging batches for library uploads (per-session, never committed)
+_upload_batch/
+_upload_batch_*/
+
+# Local Claude Code settings overrides
+.claude/settings.local.json
+
 # IDE / OS
 .vscode/
 .idea/

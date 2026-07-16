@@ -5,17 +5,22 @@ import pytest
 
 from scripts.config import Config, ConfigError, load_config
 
+INBOX_NAME = "NEW RESEARCH - TO BE REVIEWED"
+ARCHIVE_NAME = f"{INBOX_NAME}/COMPLETED"
+
 
 def test_load_config_resolves_paths(config_file, mock_research_root):
     cfg = load_config(config_file)
     assert isinstance(cfg, Config)
     assert cfg.research_root == mock_research_root
-    assert cfg.inbox_dir == mock_research_root / "to be reviwed"
-    assert cfg.completed_dir == mock_research_root / "Completed Review"
+    assert cfg.inbox_dir == mock_research_root / INBOX_NAME
+    # completed_dir = "." → resolves to research_root itself
+    assert cfg.completed_dir == mock_research_root
     assert cfg.duplicates_dir == mock_research_root / "_duplicates"
     assert cfg.catalog_csv == mock_research_root / "_catalog.csv"
     assert cfg.extract_pages == 2
     assert cfg.extract_max_chars == 3000
+    assert cfg.archive_dir == mock_research_root / INBOX_NAME / "COMPLETED"
 
 
 def test_load_config_missing_file_raises(tmp_path):
@@ -25,7 +30,7 @@ def test_load_config_missing_file_raises(tmp_path):
 
 def test_load_config_missing_required_key_raises(tmp_path):
     bad = tmp_path / "config.json"
-    bad.write_text(json.dumps({"inbox_dir": "to be reviwed"}))
+    bad.write_text(json.dumps({"inbox_dir": INBOX_NAME}))
     with pytest.raises(ConfigError, match="research_root"):
         load_config(bad)
 
@@ -34,8 +39,8 @@ def test_load_config_unreachable_root_raises(tmp_path):
     bad = tmp_path / "config.json"
     bad.write_text(json.dumps({
         "research_root": str(tmp_path / "does_not_exist"),
-        "inbox_dir": "to be reviwed",
-        "completed_dir": "Completed Review",
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": ".",
         "duplicates_dir": "_duplicates",
         "catalog_csv": "_catalog.csv",
         "extract_pages": 2,
@@ -50,8 +55,8 @@ def test_load_config_accepts_utf8_bom(tmp_path, mock_research_root):
     cfg_path = tmp_path / "config.json"
     payload = json.dumps({
         "research_root": str(mock_research_root),
-        "inbox_dir": "to be reviwed",
-        "completed_dir": "Completed Review",
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": ".",
         "duplicates_dir": "_duplicates",
         "catalog_csv": "_catalog.csv",
         "extract_pages": 2,
@@ -67,8 +72,8 @@ def test_load_config_optional_content_drafts_dir(tmp_path, mock_research_root):
     cfg = tmp_path / "config.json"
     cfg.write_text(json.dumps({
         "research_root": str(mock_research_root),
-        "inbox_dir": "to be reviwed",
-        "completed_dir": "Completed Review",
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": ".",
         "duplicates_dir": "_duplicates",
         "catalog_csv": "_catalog.csv",
         "extract_pages": 2,
@@ -85,13 +90,46 @@ def test_load_config_missing_content_drafts_dir_is_none(config_file):
     assert loaded.content_drafts_dir is None
 
 
+def test_load_config_missing_archive_dir_is_none(tmp_path, mock_research_root):
+    """When archive_dir is absent, the attribute is None (legacy config compatible)."""
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps({
+        "research_root": str(mock_research_root),
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": ".",
+        "duplicates_dir": "_duplicates",
+        "catalog_csv": "_catalog.csv",
+        "extract_pages": 2,
+        "extract_max_chars": 3000,
+    }))
+    loaded = load_config(cfg)
+    assert loaded.archive_dir is None
+
+
+def test_load_config_legacy_completed_dir_still_works(tmp_path, mock_research_root):
+    """A non-'.' completed_dir (legacy layout) still resolves under the research root."""
+    (mock_research_root / "Completed Review").mkdir()
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps({
+        "research_root": str(mock_research_root),
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": "Completed Review",
+        "duplicates_dir": "_duplicates",
+        "catalog_csv": "_catalog.csv",
+        "extract_pages": 2,
+        "extract_max_chars": 3000,
+    }))
+    loaded = load_config(cfg)
+    assert loaded.completed_dir == mock_research_root / "Completed Review"
+
+
 def test_load_config_default_location(monkeypatch, tmp_path, mock_research_root):
     """If no path passed, the env var BRAINS_RESEARCH_CONFIG steers the lookup."""
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(json.dumps({
         "research_root": str(mock_research_root),
-        "inbox_dir": "to be reviwed",
-        "completed_dir": "Completed Review",
+        "inbox_dir": INBOX_NAME,
+        "completed_dir": ".",
         "duplicates_dir": "_duplicates",
         "catalog_csv": "_catalog.csv",
         "extract_pages": 2,

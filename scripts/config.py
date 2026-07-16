@@ -26,6 +26,7 @@ class Config:
     extract_pages: int
     extract_max_chars: int
     content_drafts_dir: Path | None = None
+    archive_dir: Path | None = None
 
 
 def _default_config_path() -> Path:
@@ -33,6 +34,13 @@ def _default_config_path() -> Path:
     if env:
         return Path(env)
     return Path(__file__).resolve().parent.parent / "config.json"
+
+
+def _resolve_subdir(root: Path, value: str) -> Path:
+    """Resolve a config subdir. '' or '.' means the root itself."""
+    if value in ("", "."):
+        return root
+    return root / value
 
 
 def load_config(path: Path | None = None) -> Config:
@@ -56,13 +64,18 @@ def load_config(path: Path | None = None) -> Config:
     if data.get("content_drafts_dir"):
         content_drafts_dir = Path(data["content_drafts_dir"])
 
+    archive_dir = None
+    if data.get("archive_dir"):
+        archive_dir = _resolve_subdir(research_root, data["archive_dir"])
+
     return Config(
         research_root=research_root,
         inbox_dir=research_root / data["inbox_dir"],
-        completed_dir=research_root / data["completed_dir"],
+        completed_dir=_resolve_subdir(research_root, data["completed_dir"]),
         duplicates_dir=research_root / data["duplicates_dir"],
         catalog_csv=research_root / data["catalog_csv"],
         extract_pages=int(data["extract_pages"]),
         extract_max_chars=int(data["extract_max_chars"]),
         content_drafts_dir=content_drafts_dir,
+        archive_dir=archive_dir,
     )

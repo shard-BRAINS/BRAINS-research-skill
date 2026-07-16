@@ -1,4 +1,4 @@
-"""Apply a rename plan: move PDFs into Completed Review/<Category>/ and append _catalog.csv."""
+"""Apply a rename plan: file PDFs into <Category>/, optionally archive the original, append _catalog.csv."""
 from __future__ import annotations
 
 import csv
@@ -50,10 +50,19 @@ def apply_plan(dry_run: bool = False) -> dict:
 
     catalog_exists = cfg.catalog_csv.exists()
     rows_to_append = []
+    archived: list[str] = []
     for src_path, dst_path, info in moves:
         dst_path.parent.mkdir(parents=True, exist_ok=True)
         size = src_path.stat().st_size
+
+        if cfg.archive_dir is not None:
+            cfg.archive_dir.mkdir(parents=True, exist_ok=True)
+            archive_path = cfg.archive_dir / src_path.name
+            shutil.copy2(str(src_path), str(archive_path))
+            archived.append(src_path.name)
+
         shutil.move(str(src_path), str(dst_path))
+
         rows_to_append.append({
             "original_filename": src_path.name,
             "new_filename": dst_path.name,
@@ -79,6 +88,7 @@ def apply_plan(dry_run: bool = False) -> dict:
         "would_move": 0,
         "missing": missing,
         "skipped": skipped,
+        "archived": archived,
     }
 
 
@@ -96,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Would move: {result['would_move']}")
     else:
         print(f"Moved: {result['moved']}")
+        print(f"Archived originals: {len(result.get('archived', []))}")
     print(f"Missing source files: {len(result['missing'])}")
     print(f"Skipped (target exists): {len(result['skipped'])}")
     if result["missing"]:

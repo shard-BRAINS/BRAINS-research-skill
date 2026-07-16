@@ -1,6 +1,6 @@
 name: brains-research
-version: 1.1.0
-released: 2026-05-29
+version: 1.2.0
+released: 2026-07-15
 status: stable
 supported_platforms:
   - Windows 10/11 (PowerShell, Command Prompt)

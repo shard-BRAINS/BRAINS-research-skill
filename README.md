@@ -11,7 +11,7 @@
 
 <br />
 
-[![Version](https://img.shields.io/badge/version-v1.1.0-D99518?style=for-the-badge&labelColor=0A0A0A)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.2.0-D99518?style=for-the-badge&labelColor=0A0A0A)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-stable-D99518?style=for-the-badge&labelColor=0A0A0A)](STATUS.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-D99518?style=for-the-badge&logo=python&logoColor=FFFFFF&labelColor=0A0A0A)](#install)
 [![Licence](https://img.shields.io/badge/licence-MIT-0A0A0A?style=for-the-badge&labelColor=D99518)](LICENSE)
@@ -38,13 +38,14 @@ A Claude Code skill that maintains the BRAINS research library — a curated, ca
 
 ```mermaid
 flowchart LR
-    INBOX["<b>Inbox</b><br/><span style='font-size:11px'>new PDFs<br/>'to be reviwed' folder</span>"]:::inbox
+    INBOX["<b>Inbox</b><br/><span style='font-size:11px'>new PDFs<br/>'NEW RESEARCH - TO BE REVIEWED' folder</span>"]:::inbox
     EXTRACT["<b>Extract</b><br/><span style='font-size:11px'>first 2 pages<br/>≤3000 chars</span>"]:::process
     DEDUPE["<b>Dedupe</b><br/><span style='font-size:11px'>against _catalog.csv</span>"]:::process
     CATEGORISE["<b>Categorise</b><br/><span style='font-size:11px'>locked 10-category<br/>taxonomy</span>"]:::process
     RENAME["<b>Rename</b><br/><span style='font-size:11px'>canonical filename</span>"]:::process
-    FILE["<b>File</b><br/><span style='font-size:11px'>'Completed Review/'</span>"]:::output
+    FILE["<b>File</b><br/><span style='font-size:11px'>&lt;Category&gt;/ at root</span>"]:::output
     CATALOG["<b>Catalog</b><br/><span style='font-size:11px'>append row to<br/>_catalog.csv</span>"]:::output
+    ARCHIVE["<b>Archive</b><br/><span style='font-size:11px'>original filename<br/>copied to COMPLETED/</span>"]:::output
     DUPES["<b>_duplicates/</b><br/><span style='font-size:11px'>quarantined</span>"]:::dupe
     REVIEW["<b>Review</b><br/><span style='font-size:11px'>summary + analysis<br/>+ BRAINS commentary</span>"]:::process
     REVIEWFILE["<b>Reviews/</b><br/><span style='font-size:11px'>.review.md<br/>+ _reviews.csv</span>"]:::output
@@ -53,6 +54,7 @@ flowchart LR
     INBOX --> EXTRACT --> DEDUPE
     DEDUPE -->|duplicate| DUPES
     DEDUPE -->|new| CATEGORISE --> RENAME --> FILE --> CATALOG
+    RENAME -.->|copy original| ARCHIVE
     CATALOG -.->|on demand| REVIEW --> REVIEWFILE
     REVIEW -.->|optional| DRAFTS
 
@@ -138,13 +140,14 @@ cp commands/brains-research-*.md ~/.claude/commands/
 
 ## Configuration
 
-Edit `config.json` to point `research_root` at your Research folder. The default targets the BRAINS share at `\\192.168.1.101\Singularity_Backup\Research`. All other paths are resolved relative to `research_root`. `content_drafts_dir` is optional — when set, `/brains-research-review` writes LinkedIn / Bluesky drafts as `CT00X.md` files there and appends to `content_calendar.csv`.
+Edit `config.json` to point `research_root` at your Research folder. The default targets the BRAINS Proton Drive share at `Shared with me\05. Supporting Research`. All other paths are resolved relative to `research_root`.
 
 ```json
 {
-  "research_root": "\\\\192.168.1.101\\Singularity_Backup\\Research",
-  "inbox_dir": "to be reviwed",
-  "completed_dir": "Completed Review",
+  "research_root": "C:\\Users\\matth\\Proton Drive\\Matthew Gell\\Shared with me\\05. Supporting Research",
+  "inbox_dir": "NEW RESEARCH - TO BE REVIEWED",
+  "completed_dir": ".",
+  "archive_dir": "NEW RESEARCH - TO BE REVIEWED/COMPLETED",
   "duplicates_dir": "_duplicates",
   "catalog_csv": "_catalog.csv",
   "extract_pages": 2,
@@ -153,11 +156,17 @@ Edit `config.json` to point `research_root` at your Research folder. The default
 }
 ```
 
+Key fields:
+
+- `completed_dir` — the folder that contains the 10 category subfolders. Use `"."` when categories live at the research root (the current layout). Use a folder name (e.g. `"Completed Review"`) for legacy wrapped layouts.
+- `archive_dir` — optional; when set, `apply_renames.py` copies each processed original (under its original filename) here as an audit-trail receipt before renaming and filing the working copy.
+- `content_drafts_dir` — optional; when set, `/brains-research-review` writes LinkedIn / Bluesky drafts as `CT00X.md` files there and appends to `content_calendar.csv`.
+
 ---
 
 ## The locked taxonomy
 
-Ten categories. See [`references/taxonomy.md`](references/taxonomy.md) for the full definitions. **The taxonomy is doctrine, not configuration** — the skill will refuse to silently invent a new category. If a paper doesn't fit, it asks the user to confirm a re-categorisation or to extend the taxonomy explicitly.
+Eleven categories. See [`references/taxonomy.md`](references/taxonomy.md) for the full definitions. **The taxonomy is doctrine, not configuration** — the skill will refuse to silently invent a new category. If a paper doesn't fit, it asks the user to confirm a re-categorisation or to extend the taxonomy explicitly.
 
 This is deliberate. The library's value is in its consistent shape over time; a drifting taxonomy is a broken library.
 

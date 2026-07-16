@@ -13,6 +13,7 @@ TAXONOMY = [
     "AI-General", "AI-Ethics-Governance", "AI-Mental-Health",
     "AI-Neurodiversity-Autism", "AI-Education", "Neurodiversity-General",
     "Autism", "Suicide", "Mental-Health-General", "HCI-Cognitive-Theory",
+    "Extremism-Radicalisation",
 ]
 
 
@@ -42,17 +43,29 @@ def status_report(recent_n: int = 10) -> dict:
         if not abs_path.exists():
             missing_files.append(rel)
 
+    # Category-scoped orphan scan: only look inside the 10 canonical category
+    # folders under completed_dir. This is safe whether completed_dir is the
+    # research root itself (new layout) or a wrapper folder (legacy layout).
     orphan_files: list[str] = []
-    if cfg.completed_dir.exists():
-        for p in cfg.completed_dir.rglob("*.pdf"):
+    for cat in TAXONOMY:
+        cat_dir = cfg.completed_dir / cat
+        if not cat_dir.exists():
+            continue
+        for p in cat_dir.rglob("*.pdf"):
             rel = str(p.relative_to(cfg.research_root)).replace("\\", "/")
             if rel not in catalog_paths:
                 orphan_files.append(rel)
 
+    # Inbox count is top-level PDFs only; the archive subfolder (e.g.
+    # COMPLETED/) is intentionally excluded.
     inbox_count = sum(1 for _ in cfg.inbox_dir.glob("*.pdf")) if cfg.inbox_dir.exists() else 0
     duplicates_count = (
         sum(1 for _ in cfg.duplicates_dir.glob("*.pdf"))
         if cfg.duplicates_dir.exists() else 0
+    )
+    archive_count = (
+        sum(1 for _ in cfg.archive_dir.glob("*.pdf"))
+        if cfg.archive_dir is not None and cfg.archive_dir.exists() else 0
     )
 
     recent = rows[-recent_n:] if rows else []
@@ -62,6 +75,7 @@ def status_report(recent_n: int = 10) -> dict:
         "by_category": by_category,
         "inbox_count": inbox_count,
         "duplicates_count": duplicates_count,
+        "archive_count": archive_count,
         "missing_files": missing_files,
         "orphan_files": orphan_files,
         "recent": recent,

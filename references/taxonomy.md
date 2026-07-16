@@ -1,4 +1,4 @@
-# Locked taxonomy — the 10 categories
+# Locked taxonomy — the 11 categories
 
 Do NOT add new categories without explicit user approval.
 
@@ -10,10 +10,11 @@ Do NOT add new categories without explicit user approval.
 | `AI-Neurodiversity-Autism` | LLMs for ND / autistic users, ableism datasets, autism therapy LLMs, ND bias in AI |
 | `AI-Education` | Generative AI in learning, K-12, STEM, educational transformation |
 | `Neurodiversity-General` | ND theory, frameworks, occupational therapy, workforce, resilience, origins of the concept |
-| `Autism` | Clinical, comorbidities, prevalence, employment, policy / strategy, ethics of advocacy |
+| `Autism` | Clinical, comorbidities, prevalence, employment, policy / strategy, ethics of advocacy; autism × extremism / radicalisation / cybercrime / online safety when autism is the dominant axis |
 | `Suicide` | Suicide mitigation, triage, online suicidal ideation, autism × suicidality |
 | `Mental-Health-General` | Depression, social isolation, smartphone addiction, executive function, ADHD economics, crisis intervention |
 | `HCI-Cognitive-Theory` | Cognitive Load Theory, Self-Determination Theory, Hawthorne effect, Technology Acceptance Model |
+| `Extremism-Radicalisation` | Counter-terrorism policy, online radicalisation, disengagement / reintegration programmes, CVE frameworks — **when the paper's dominant axis is extremism/CVE and not neurodiversity or AI**. Autism × extremism papers go under `Autism`; ND × CVE papers go under `Neurodiversity-General`. Added 2026-07-15. |
 
 ## Cross-cutting papers
 

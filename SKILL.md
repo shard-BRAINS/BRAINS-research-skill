@@ -1,7 +1,7 @@
 ---
 name: brains-research
 description: Use when Matthew says "process research", "catalogue these papers", "new PDFs", or drops files into the BRAINS research inbox. Maintains the BRAINS research library — extracts, dedupes, categorises, renames, and files PDFs into a locked 10-category taxonomy, appending each entry to _catalog.csv. Read-only status command also available. A BRAINS Incubator project.
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -19,11 +19,11 @@ This section describes the behavioural contract — how Claude should behave acr
 
 **Locked taxonomy.** Never silently add a category. The 10 categories live in `references/taxonomy.md` and are canonical. If a paper genuinely does not fit one of the ten, surface it and ask the user before proceeding.
 
-**Locked dedupe rule.** Byte-exact match against `Completed Review/**` is the only dedupe signal. No fuzzy matching, no near-duplicate inference. False negatives are acceptable; false positives are not.
+**Locked dedupe rule.** Byte-exact match against any PDF already filed under the 10 canonical category folders is the only dedupe signal. No fuzzy matching, no near-duplicate inference. False negatives are acceptable; false positives are not.
 
 **Append-only catalog.** `_catalog.csv` is never rewritten. Corrections to past entries are out of scope for this skill and must be done manually.
 
-**No silent renames.** A file already in `Completed Review/` is not renamed by this skill. If the user wants to rename, that is a separate explicit task.
+**No silent renames.** A file already filed under a category folder is not renamed by this skill. If the user wants to rename, that is a separate explicit task.
 
 **Plain, direct tone.** Status reports and error messages are plain and direct. Use identity-first language by default (`autistic researcher`, `neurodivergent participant`). No deficit framing of neurodivergence in any reference, command, or output.
 
@@ -57,15 +57,23 @@ Schema (see `config.json.example`):
 
 ```json
 {
-  "research_root": "\\\\192.168.1.101\\Singularity_Backup\\Research",
-  "inbox_dir": "to be reviwed",
-  "completed_dir": "Completed Review",
+  "research_root": "C:\\Users\\matth\\Proton Drive\\Matthew Gell\\Shared with me\\05. Supporting Research",
+  "inbox_dir": "NEW RESEARCH - TO BE REVIEWED",
+  "completed_dir": ".",
+  "archive_dir": "NEW RESEARCH - TO BE REVIEWED/COMPLETED",
   "duplicates_dir": "_duplicates",
   "catalog_csv": "_catalog.csv",
   "extract_pages": 2,
-  "extract_max_chars": 3000
+  "extract_max_chars": 3000,
+  "content_drafts_dir": "C:\\Users\\matth\\Proton Drive\\Matthew Gell\\Shared with me\\06. Operations\\Admin\\03_Content"
 }
 ```
+
+Key notes on the schema:
+
+- `completed_dir` is the folder that contains the 10 category subfolders. Set it to `"."` (or `""`) when the category folders live directly at the research root. Set it to `"Completed Review"` (or another name) for legacy layouts where categories were wrapped in a parent folder.
+- `archive_dir` is optional. When present, `apply_renames.py` copies the original file (under its original filename) into that folder before renaming and filing the working copy into the category. Provides an audit-trail receipt of what was ingested and when.
+- `content_drafts_dir` is optional. When present, `/brains-research-review` writes LinkedIn / Bluesky drafts as `CT00X.md` files there and appends to `content_calendar.csv`.
 
 ---
 

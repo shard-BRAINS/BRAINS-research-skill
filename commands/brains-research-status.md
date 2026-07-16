@@ -30,6 +30,7 @@ Print a concise status report of the BRAINS research library. Read-only — neve
      Suicide                       <n>
      Mental-Health-General         <n>
      HCI-Cognitive-Theory          <n>
+     Extremism-Radicalisation      <n>
 
    Most recent additions (last 10):
      <YYYY> — <Author> — <title>          <category>

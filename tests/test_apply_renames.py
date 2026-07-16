@@ -4,6 +4,8 @@ import json
 
 from scripts.apply_renames import apply_plan
 
+INBOX_NAME = "NEW RESEARCH - TO BE REVIEWED"
+
 
 def _write_plan(root, entries):
     plan_path = root / "_rename_plan.json"
@@ -29,7 +31,7 @@ def test_apply_plan_moves_file_and_writes_catalog(
     assert result["moved"] == 1
     assert result["missing"] == []
     assert result["skipped"] == []
-    target = mock_research_root / "Completed Review" / "AI-General" / "2026 - Test - Sample paper.pdf"
+    target = mock_research_root / "AI-General" / "2026 - Test - Sample paper.pdf"
     assert target.exists()
     assert not sample_pdf_in_inbox.exists()
     catalog = mock_research_root / "_catalog.csv"
@@ -38,6 +40,32 @@ def test_apply_plan_moves_file_and_writes_catalog(
     assert len(rows) == 1
     assert rows[0]["category"] == "AI-General"
     assert rows[0]["new_filename"] == "2026 - Test - Sample paper.pdf"
+    assert rows[0]["new_path"] == "AI-General/2026 - Test - Sample paper.pdf"
+
+
+def test_apply_plan_archives_original_when_archive_dir_set(
+    mock_research_root, config_file, sample_pdf_in_inbox, monkeypatch
+):
+    """The original filename is preserved as a receipt in the archive_dir."""
+    monkeypatch.setenv("BRAINS_RESEARCH_CONFIG", str(config_file))
+    _write_plan(mock_research_root, {
+        "sample.pdf": {
+            "category": "AI-General",
+            "new_name": "2026 - Test - Sample paper.pdf",
+            "year": "2026",
+            "author": "Test",
+            "title": "Sample paper",
+            "doc_type": "Test fixture",
+        }
+    })
+    result = apply_plan(dry_run=False)
+    assert result["moved"] == 1
+    assert result.get("archived") == ["sample.pdf"]
+    archive_copy = mock_research_root / INBOX_NAME / "COMPLETED" / "sample.pdf"
+    assert archive_copy.exists()
+    # And the renamed copy is filed in the category folder
+    target = mock_research_root / "AI-General" / "2026 - Test - Sample paper.pdf"
+    assert target.exists()
 
 
 def test_apply_plan_dry_run_does_not_move(
@@ -59,6 +87,8 @@ def test_apply_plan_dry_run_does_not_move(
     assert result["would_move"] == 1
     assert sample_pdf_in_inbox.exists()
     assert not (mock_research_root / "_catalog.csv").exists()
+    # No archive copy in dry-run mode
+    assert not (mock_research_root / INBOX_NAME / "COMPLETED" / "sample.pdf").exists()
 
 
 def test_apply_plan_reports_missing_sources(
@@ -84,7 +114,7 @@ def test_apply_plan_skips_existing_targets(
     mock_research_root, config_file, sample_pdf_in_inbox, monkeypatch
 ):
     monkeypatch.setenv("BRAINS_RESEARCH_CONFIG", str(config_file))
-    target_dir = mock_research_root / "Completed Review" / "AI-General"
+    target_dir = mock_research_root / "AI-General"
     target_dir.mkdir(parents=True)
     (target_dir / "2026 - Test - Sample paper.pdf").write_text("existing")
     _write_plan(mock_research_root, {

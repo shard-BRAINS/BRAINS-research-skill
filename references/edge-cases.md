@@ -13,7 +13,7 @@ Surface every such file to the user at the end of the run.
 
 ## Filename collisions in the destination
 
-If `Completed Review/<Category>/<new_name>` already exists, `apply_renames.py` skips the move and reports the collision. Resolution is manual.
+If `<research_root>/<Category>/<new_name>` already exists, `apply_renames.py` skips the move and reports the collision. Resolution is manual.
 
 ## Non-PDF files in the inbox
 
@@ -25,7 +25,11 @@ See `taxonomy.md`. Pick the dominant axis.
 
 ## Byte-exact duplicates
 
-If a new file matches an existing file in `Completed Review/**` by byte size, it is moved to `_duplicates/`. No fuzzy matching. False negatives are acceptable; false positives are not.
+If a new file matches an existing file already filed under any of the 10 category folders (byte-size match), it is moved to `_duplicates/`. No fuzzy matching. False negatives are acceptable; false positives are not.
+
+## Archive folder
+
+`apply_renames.py` copies each processed original (under its original filename) to `<archive_dir>/` before renaming the working copy into `<Category>/`. This preserves a receipt of what was ingested and when. The archive is never read back by the skill; it exists purely as a human-readable audit trail. It is safe to prune manually.
 
 ## Catalog repair
 

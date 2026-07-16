@@ -5,6 +5,27 @@ All notable changes to BRAINS Research Skill will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-07-15
+
+### Changed
+- **Research root relocated** from the local SMB share (`\\192.168.1.101\Singularity_Backup\Research`) to the BRAINS Proton Drive share at `Shared with me\05. Supporting Research`. `config.json` and `config.json.example` updated.
+- **Category folders now live at the research root**, not under a `Completed Review/` wrapper. `config.json` uses `"completed_dir": "."` to reflect this. The wrapped-layout form (`"completed_dir": "Completed Review"`) still works for legacy installs.
+- **Inbox renamed** from `"to be reviwed"` to `"NEW RESEARCH - TO BE REVIEWED"`.
+- `scripts/apply_renames.py` now writes the catalog's `new_path` column without any `Completed Review/` prefix — the value is `"<Category>/<new_name>"` in the new layout.
+- `scripts/status.py` orphan scan is now category-scoped (iterates the 10 canonical category folders) so it stays correct when `completed_dir` is the research root itself. Inbox count is top-level PDFs only — the archive subfolder is excluded.
+- `commands/brains-research-process.md` — dedupe glob is now per-category; archive step documented.
+- `references/edge-cases.md` — path language updated; new section on the archive folder.
+
+### Added
+- **`archive_dir` config key (optional).** When set, `apply_renames.py` copies each processed original (under its original filename) to that folder before renaming and filing the working copy into `<Category>/`. Provides an audit-trail receipt of what was ingested and when. Default: `NEW RESEARCH - TO BE REVIEWED/COMPLETED`.
+- `Config.archive_dir: Path | None` on the dataclass.
+- `status.status_report()` returns `archive_count`.
+- Test coverage for archive behaviour, top-level-only inbox counting, and legacy `completed_dir` compatibility.
+
+### Migration notes
+- Existing `_catalog.csv` had 102 rows carrying the legacy `Completed Review/<Category>/...` prefix in `new_path`. As part of the reorg, these are rewritten in place (one-time migration) to `<Category>/...` so the integrity check does not permanently report 102 missing files. A backup copy of the pre-migration catalog is written to `_catalog.csv.pre-1.2.0.bak` on the share.
+- Users on the legacy `\\192.168.1.101\Singularity_Backup\Research` share can keep their existing `config.json` unchanged — no code paths were broken; only the defaults and the doc examples changed. To adopt the categories-at-root layout, set `"completed_dir": "."`.
+
 ## [1.1.0] — 2026-05-29
 
 ### Added

@@ -1,7 +1,8 @@
 {
-  "research_root": "\\\\192.168.1.101\\Singularity_Backup\\Research",
-  "inbox_dir": "to be reviwed",
-  "completed_dir": "Completed Review",
+  "research_root": "C:\\Users\\matth\\Proton Drive\\Matthew Gell\\Shared with me\\05. Supporting Research",
+  "inbox_dir": "NEW RESEARCH - TO BE REVIEWED",
+  "completed_dir": ".",
+  "archive_dir": "NEW RESEARCH - TO BE REVIEWED/COMPLETED",
   "duplicates_dir": "_duplicates",
   "catalog_csv": "_catalog.csv",
   "extract_pages": 2,
